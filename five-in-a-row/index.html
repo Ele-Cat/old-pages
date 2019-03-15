@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>五子棋</title>
+    <meta charset="utf-8">
+    <style>
+      body {
+          background-color: #000;
+      }
+      
+      #stage {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 700px;
+          height: 700px;
+          margin: auto;
+          border: 1px solid #333;
+      }
+      
+      canvas {
+          position: absolute;
+          top: 0;
+          left: 0;
+      }
+      
+      #background-layer {
+          z-index: 1;
+      }
+      
+      #game-layer {
+          z-index: 2;
+      }
+      
+      #ui-layer {
+          z-index: 3;
+      }
+      
+      #analysis-layer {
+          z-index: 4;
+      }
+      
+      #control {
+          z-index: 9;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 300px;
+          height: 200px;
+          margin: auto;
+          color: #fff;
+      }
+      
+      #control:before {
+          content: "";
+          z-index: -1;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+      }
+      
+      .list {
+          list-style: none;
+          padding-left: 0;
+          text-align: center;
+      }
+      
+      .item {
+          margin: 10px 0;
+      }
+      
+      #start {
+          width: 80px;
+          height: 30px;
+      }
+      
+      #gameover {
+          z-index: 10;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          font-size: 24px;
+          text-align: center;
+          color: #fff;
+          background-color: rgba(0, 0, 0, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="background-layer" width="700" height="700"></canvas>
+      <canvas id="game-layer" width="700" height="700"></canvas>
+      <canvas id="ui-layer" width="700" height="700"></canvas>
+      <canvas id="analysis-layer" width="700" height="700"></canvas>
+    </div>
+    <div id="control">
+      <fieldset>
+        <legend>游戏设定</legend>
+        <ul class="list">
+          <li class="item"><span>先手:</span>
+            <input id="blackFirst" type="radio" name="firstPlay" value="1">
+            <label for="blackFirst">黑子</label>
+            <input id="whiteFirst" type="radio" name="firstPlay" value="2" checked="true">
+            <label for="whiteFirst">白子</label>
+          </li>
+          <li class="item"><span>电脑:</span>
+            <input id="blackAI" type="radio" name="AIColor" value="1" checked="true">
+            <label for="blackAI">黑子</label>
+            <input id="whiteAI" type="radio" name="AIColor" value="2">
+            <label for="whiteAI">白子</label>
+          </li>
+          <li class="item"><span>提示:</span>
+            <input id="tipOn" type="radio" name="tip" value="1">
+            <label for="tipOn">打开</label>
+            <input id="tipOff" type="radio" name="tip" value="0" checked="true">
+            <label for="tipOff">关闭</label>
+          </li>
+          <li class="item">
+            <input id="start" type="button" value="开始游戏">
+          </li>
+        </ul>
+      </fieldset>
+    </div>
+    <div id="gameover"></div>
+
+    <script>
+var GoBang = {
+    init: function () {
+        GoBang.Drawing.init();
+        GoBang.Gaming.init();
+    }
+};
+
+GoBang.Drawing = (function () {
+    var bgCvs = document.getElementById("background-layer"),
+        bgCtx = bgCvs.getContext('2d'),
+        gmCvs = document.getElementById("game-layer"),
+        gmCtx = gmCvs.getContext('2d'),
+        uiCvs = document.getElementById("ui-layer"),
+        uiCtx = uiCvs.getContext('2d'),
+        ayCvs = document.getElementById("analysis-layer"),
+        ayCtx = ayCvs.getContext('2d');
+
+    var cellSize = 40,
+        lineWidth = 1,
+        lineColor = "#000",
+        dotColor = "#000",
+        aimColor = "#444",
+        dotRadius = 4,
+        gridSize = cellSize + lineWidth,
+        startPos = (bgCvs.width - gridSize * 14) / 2,
+        endPos = (bgCvs.width + gridSize * 14) / 2,
+        aimSize = gridSize * 0.8;
+
+    return {
+        init: function () {
+            this.drawChessBoard();
+        },
+
+        clearFrame: function (type) {
+            switch (type) {
+                case 1:
+                    bgCtx.clearRect(0, 0, bgCvs.width, bgCvs.height);
+                    break;
+                case 2:
+                    gmCtx.clearRect(0, 0, gmCvs.width, gmCvs.height);
+                    break;
+                case 3:
+                    uiCtx.clearRect(0, 0, uiCvs.width, uiCvs.height);
+                    break;
+                case 4:
+                    ayCtx.clearRect(0, 0, ayCvs.width, ayCvs.height);
+                    break;
+            }
+        },
+
+        getData: function () {
+            return {cvs: ayCvs, w: bgCvs.width, h: bgCvs.height, gs: gridSize, ts: aimSize};
+        },
+
+        drawChessBoard: function () {
+            var img = new Image();
+            img.onload = function () {
+                bgCtx.drawImage(img, startPos - gridSize, startPos - gridSize, gridSize * 16, gridSize * 16);
+                bgCtx.strokeStyle = lineColor;
+                bgCtx.lineWidth = lineWidth;
+
+                for (var i = 0; i < 15; i++) {
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(Math.floor(startPos), Math.floor(startPos + i * gridSize));
+                    bgCtx.lineTo(Math.floor(endPos), Math.floor(startPos + i * gridSize));
+                    bgCtx.closePath();
+                    bgCtx.stroke();
+                    bgCtx.beginPath();
+                    bgCtx.moveTo(Math.floor(startPos + i * gridSize), Math.floor(startPos));
+                    bgCtx.lineTo(Math.floor(startPos + i * gridSize), Math.floor(endPos));
+                    bgCtx.closePath();
+                    bgCtx.stroke();
+                }
+
+                bgCtx.fillStyle = dotColor;
+                for (i = 0; i < 2; i++) {
+                    for (var j = 0; j < 2; j++) {
+                        bgCtx.beginPath();
+                        bgCtx.arc(Math.floor(startPos + (3 + i * 8) * gridSize), Math.floor(startPos + (3 + j * 8) * gridSize), Math.floor(dotRadius), 0, 2 * Math.PI, true);
+                        bgCtx.closePath();
+                        bgCtx.fill();
+                    }
+                }
+                bgCtx.beginPath();
+                bgCtx.arc(Math.floor(startPos + 7 * gridSize), Math.floor(startPos + 7 * gridSize), Math.floor(dotRadius), 0, 2 * Math.PI, true);
+                bgCtx.closePath();
+                bgCtx.fill();
+            };
+            img.src = "https://timgsa.baidu.com/timg?image&quality=80&size=b10000_10000&sec=1487644595&di=bc6dea9a35ee305afaaa2ed9f994c6b7&src=http://www.shijuew.com/uploadfile/2013/1125/20131125021253874.jpg";
+        },
+
+        drawChesspiece: function (type, x, y) {
+            var radgrad;
+            if (type === 1) {
+                // 黑子
+                radgrad = gmCtx.createRadialGradient(startPos + x * gridSize, startPos + y * gridSize, 10, startPos + x * gridSize - 2, startPos + y * gridSize - 3, 2);
+                radgrad.addColorStop(0, "#000");
+                radgrad.addColorStop(1, "#444");
+            } else if (type === 2) {
+                // 白子
+                radgrad = gmCtx.createRadialGradient(startPos + x * gridSize, startPos + y * gridSize, 10, startPos + x * gridSize - 2, startPos + y * gridSize - 3, 2);
+                radgrad.addColorStop(0, "#bbb");
+                radgrad.addColorStop(1, "#fff");
+            }
+            gmCtx.fillStyle = radgrad;
+            gmCtx.beginPath();
+            gmCtx.arc(startPos + x * gridSize, startPos + y * gridSize, 10, 0, 2 * Math.PI, true);
+            gmCtx.closePath();
+            gmCtx.fill();
+        },
+
+        drawAim: function (x, y) {
+            var px = startPos + x * gridSize - aimSize / 2, py = startPos + y * gridSize - aimSize / 2;
+
+            uiCtx.strokeStyle = aimColor;
+            uiCtx.lineWidth = 4;
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px), Math.floor(py));
+            uiCtx.lineTo(Math.floor(px + aimSize / 3), Math.floor(py));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px + aimSize * 2 / 3), Math.floor(py));
+            uiCtx.lineTo(Math.floor(px + aimSize), Math.floor(py));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px), Math.floor(py + aimSize));
+            uiCtx.lineTo(Math.floor(px + aimSize / 3), Math.floor(py + aimSize));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px + aimSize * 2 / 3), Math.floor(py + aimSize));
+            uiCtx.lineTo(Math.floor(px + aimSize), Math.floor(py + aimSize));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px), Math.floor(py));
+            uiCtx.lineTo(Math.floor(px), Math.floor(py + aimSize / 3));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px), Math.floor(py + aimSize * 2 / 3));
+            uiCtx.lineTo(Math.floor(px), Math.floor(py + aimSize));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px + aimSize), Math.floor(py));
+            uiCtx.lineTo(Math.floor(px + aimSize), Math.floor(py + aimSize / 3));
+            uiCtx.closePath();
+            uiCtx.stroke();
+            uiCtx.beginPath();
+            uiCtx.moveTo(Math.floor(px + aimSize), Math.floor(py + aimSize * 2 / 3));
+            uiCtx.lineTo(Math.floor(px + aimSize), Math.floor(py + aimSize));
+            uiCtx.closePath();
+            uiCtx.stroke();
+        },
+
+        drawValue: function (obj) {
+            if (obj.type === 1) {
+                ayCtx.fillStyle = "#0f0";
+            } else {
+                ayCtx.fillStyle = "#f00";
+            }
+            ayCtx.font = "16px serif";
+            ayCtx.textAlign = "center";
+            ayCtx.textBaseline = "middle";
+            ayCtx.fillText(obj.value, startPos + obj.x * gridSize, startPos + obj.y * gridSize);
+        },
+
+        drawLine: function (obj) {
+            if (obj.type === 1) {
+                ayCtx.strokeStyle = "#f00";
+            } else {
+                ayCtx.strokeStyle = "#ff0";
+            }
+            ayCtx.lineWidth = 2;
+            ayCtx.lineCap = "round";
+            ayCtx.beginPath();
+            ayCtx.moveTo(startPos + obj.startPoint.y * gridSize, startPos + obj.startPoint.x * gridSize);
+            ayCtx.lineTo(startPos + obj.endPoint.y * gridSize, startPos + obj.endPoint.x * gridSize);
+            ayCtx.closePath();
+            ayCtx.stroke();
+        }
+    }
+}());
+
+GoBang.Gaming = (function () {
+    var data = GoBang.Drawing.getData();
+    var canvas = data.cvs, width = data.w, height = data.h, gridSize = data.gs, aimSize = data.ts;
+    var rangeMin = (width - gridSize * 15) / 2, rangeMax = (width + gridSize * 15) / 2;
+    var chesspiecePos = [], turn = 2, AIColor = 1, canTip = false;
+    var $blackFirst = document.getElementById("blackFirst"),
+        $blackAI = document.getElementById("blackAI"),
+        $tipOn = document.getElementById("tipOn"),
+        $start = document.getElementById("start"),
+        $control = document.getElementById("control"),
+        $gameover = document.getElementById("gameover");
+
+
+    return {
+        init: function () {
+            this.initialEvent();
+        },
+
+        initialData: function () {
+            for (var i = 0; i < 15; i++) {
+                chesspiecePos[i] = [];
+                for (var j = 0; j < 15; j++) {
+                    chesspiecePos[i][j] = 0;
+                }
+            }
+            if ($blackFirst.checked) {
+                turn = 1;
+            } else {
+                turn = 2;
+            }
+            if ($blackAI.checked) {
+                AIColor = 1;
+            } else {
+                AIColor = 2;
+            }
+            if ($tipOn.checked) {
+                canTip = true;
+            } else {
+                canTip = false;
+            }
+        },
+
+        initialEvent: function () {
+            $start.addEventListener("click", function (e) {
+                $control.style.display = "none";
+                this.initialData();
+
+                if (AIColor === turn) {
+                    // AI开局
+                    this.setChesspiece({x: 7, y: 7});
+                }
+            }.bind(this), false);
+
+            canvas.addEventListener("mousemove", function (e) {
+                var x = e.offsetX, y = e.offsetY;
+                var pos = this.getPos(x, y);
+
+                GoBang.Drawing.clearFrame(3);
+                if (pos !== null) {
+                    GoBang.Drawing.drawAim(pos.x, pos.y);
+                }
+            }.bind(this), false);
+
+            canvas.addEventListener("mousedown", function (e) {
+                var x = e.offsetX, y = e.offsetY;
+                var pos = this.getPos(x, y);
+                if (turn === AIColor) return;
+
+                if (pos !== null) {
+                    // 注意棋盘与数组对应关系的差别
+                    if (chesspiecePos[pos.y][pos.x] === 0) {
+                        this.setChesspiece(pos);
+                        // AI续棋
+                        var bestPoint = this.getBestPoint();
+                        this.setChesspiece(bestPoint);
+                    }
+                }
+            }.bind(this), false);
+        },
+
+        setChesspiece: function (pos) {
+            GoBang.Drawing.drawChesspiece(turn, pos.x, pos.y);
+            chesspiecePos[pos.y][pos.x] = turn;
+            if (!this.gameOver(pos)) {
+                turn = 3 - turn;
+                // 数据分析
+                this.getBestPoint();
+            }
+        },
+
+        getPos: function (x, y) {
+            if (x > rangeMin && x < rangeMax && y > rangeMin && y < rangeMax) {
+                var px = x - rangeMin, py = y - rangeMin;
+                var tx = px % gridSize, ty = py % gridSize, tmin = (gridSize - aimSize) / 2, tmax = (gridSize + aimSize) / 2;
+                if (tx > tmin && tx < tmax && ty > tmin && ty < tmax) {
+                    return {x: Math.floor(px / gridSize), y: Math.floor(py / gridSize)};
+                }
+            }
+            return null;
+        },
+
+        gameOver: function (pos) {
+            var chessArr = [[], [], [], []], x = pos.y, y = pos.x, myColor = turn, hisColor = 3 - turn, noColor = 0;
+
+            for (var i = 0; i < 9; i++) {
+                if (i === 4) {
+                    chessArr[0].push({x: x, y: y, v: myColor});
+                    chessArr[1].push({x: x, y: y, v: myColor});
+                    chessArr[2].push({x: x, y: y, v: myColor});
+                    chessArr[3].push({x: x, y: y, v: myColor});
+                    continue;
+                }
+                // |
+                if ((x - 4 + i) > -1 && (x - 4 + i) < 15) {
+                    chessArr[0].push({x: x - 4 + i, y: y, v: chesspiecePos[x - 4 + i][y]});
+                } else {
+                    chessArr[0].push({x: x - 4 + i, y: y, v: hisColor});
+                }
+                // --
+                if ((y - 4 + i) > -1 && (y - 4 + i) < 15) {
+                    chessArr[1].push({x: x, y: y - 4 + i, v: chesspiecePos[x][y - 4 + i]});
+                } else {
+                    chessArr[1].push({x: x, y: y - 4 + i, v: hisColor});
+                }
+                // \
+                if (((y - 4 + i) > -1 && (y - 4 + i) < 15) && ((x - 4 + i) > -1 && (x - 4 + i) < 15)) {
+                    chessArr[2].push({x: x - 4 + i, y: y - 4 + i, v: chesspiecePos[x - 4 + i][y - 4 + i]});
+                } else {
+                    chessArr[2].push({x: x - 4 + i, y: y - 4 + i, v: hisColor});
+                }
+                // /
+                if (((y - 4 + i) > -1 && (y - 4 + i) < 15) && ((x + 4 - i) > -1 && (x + 4 - i) < 15)) {
+                    chessArr[3].push({x: x + 4 - i, y: y - 4 + i, v: chesspiecePos[x + 4 - i][y - 4 + i]});
+                } else {
+                    chessArr[3].push({x: x + 4 - i, y: y - 4 + i, v: hisColor});
+                }
+            }
+
+            for (var i = 0; i < 4; i++) {
+                var count = 1, startPoint = {}, endPoint = {}, tempArr = chessArr[i];
+                for (var j = 1; j < 5; j++) {
+                    if (startPoint.x === undefined) {
+                        if (tempArr[4 - j].v === myColor) {
+                            count += 1;
+                        } else {
+                            startPoint.x = tempArr[4 - j + 1].x;
+                            startPoint.y = tempArr[4 - j + 1].y;
+                        }
+                    }
+                    if (endPoint.x === undefined) {
+                        if (tempArr[4 + j].v === myColor) {
+                            count += 1;
+                        } else {
+                            endPoint.x = tempArr[4 + j - 1].x;
+                            endPoint.y = tempArr[4 + j - 1].y;
+                        }
+                    }
+                }
+
+                if (startPoint.x === undefined) {
+                    startPoint.x = tempArr[0].x;
+                    startPoint.y = tempArr[0].y;
+                }
+                if (endPoint.x === undefined) {
+                    endPoint.x = tempArr[8].x;
+                    endPoint.y = tempArr[8].y;
+                }
+                if (count >= 5) {
+                    GoBang.Drawing.clearFrame(4);
+                    GoBang.Drawing.drawLine({
+                        type: myColor === AIColor ? 1 : 2,
+                        startPoint: startPoint,
+                        endPoint: endPoint
+                    });
+                    setTimeout(this.showResult, 1500);
+                    return true;
+                }
+            }
+
+            return false;
+        },
+
+        showResult: function () {
+            var loseStr = ["Go die的人生不需要解释", "AI表示：我遇到了一个更简单的AI", "是难度太高了还是..."],
+                winStr = ["AI已被虐哭，大侠手下留情啊！", "so easy！！！", "这样的AI我可以1V10"];
+            if (turn === AIColor) {
+                $gameover.style.color = "#f00";
+                $gameover.innerHTML = "You Lose<br/>" + loseStr[Math.floor(Math.random() * loseStr.length)];
+            } else {
+                $gameover.style.color = "#ff0";
+                $gameover.innerHTML = "You Win<br/>" + winStr[Math.floor(Math.random() * winStr.length)];
+            }
+            $gameover.style.display = "flex";
+
+            setTimeout(function () {
+                $gameover.style.display = "none";
+                $control.style.display = "block";
+                GoBang.Drawing.clearFrame(2);
+                GoBang.Drawing.clearFrame(4);
+            }, 3000);
+        },
+
+        getBestPoint: function () {
+            var myScore = [], hisScore = [];
+
+            for (var i = 0; i < 15; i++) {
+                for (var j = 0; j < 15; j++) {
+                    if (chesspiecePos[i][j] === 0) {
+                        myScore.push(this.func1({x: i, y: j}, {myColor: turn, hisColor: 3 - turn, noColor: 0}));
+                        hisScore.push(this.func1({x: i, y: j}, {myColor: 3 - turn, hisColor: turn, noColor: 0}));
+                    } else {
+                        myScore.push(0);
+                        hisScore.push(0);
+                    }
+                }
+            }
+
+            var myHighestScore = Math.max.apply(Math, myScore), hisHighestScore = Math.max.apply(Math, hisScore), bestPoint;
+            var maxValuePosArr = [], oppositeValueArr = [], bestPointArr = [], analysisArr = [];
+            var k, m, n;
+            if (myHighestScore >= hisHighestScore) {
+                maxValuePosArr = this.getMaxIndex(myScore, myHighestScore);
+                if (maxValuePosArr.length > 1) {
+                    for (k = 0; k < maxValuePosArr.length; k++) {
+                        oppositeValueArr.push(hisScore[maxValuePosArr[k]]);
+                    }
+                    bestPointArr = this.getMaxIndex(oppositeValueArr, Math.max.apply(Math, oppositeValueArr));
+                    for (m = 0; m < bestPointArr.length; m++) {
+                        bestPointArr[m] = maxValuePosArr[bestPointArr[m]];
+                    }
+                } else {
+                    bestPointArr.push(maxValuePosArr[0]);
+                }
+                for (n = 0; n < bestPointArr.length; n++) {
+                    analysisArr.push({
+                        type: 1,
+                        y: Math.floor(bestPointArr[n] / 15),
+                        x: Math.floor(bestPointArr[n] % 15),
+                        value: myHighestScore
+                    });
+                }
+            } else {
+                maxValuePosArr = this.getMaxIndex(hisScore, hisHighestScore);
+                if (maxValuePosArr.length > 1) {
+                    for (k = 0; k < maxValuePosArr.length; k++) {
+                        oppositeValueArr.push(myScore[maxValuePosArr[k]]);
+                    }
+                    bestPointArr = this.getMaxIndex(oppositeValueArr, Math.max.apply(Math, oppositeValueArr));
+                    for (m = 0; m < bestPointArr.length; m++) {
+                        bestPointArr[m] = maxValuePosArr[bestPointArr[m]];
+                    }
+                } else {
+                    bestPointArr.push(maxValuePosArr[0]);
+                }
+                for (n = 0; n < bestPointArr.length; n++) {
+                    analysisArr.push({
+                        type: 2,
+                        y: Math.floor(bestPointArr[n] / 15),
+                        x: Math.floor(bestPointArr[n] % 15),
+                        value: hisHighestScore
+                    });
+                }
+            }
+
+            if (canTip) {
+                GoBang.Drawing.clearFrame(4);
+                for (i = 0; i < analysisArr.length; i++) {
+                    GoBang.Drawing.drawValue(analysisArr[i]);
+                }
+            }
+
+            return analysisArr[Math.floor(Math.random() * analysisArr.length)];
+        },
+
+        getMaxIndex: function (array, max) {
+            var maxArr = [];
+            for (var i = 0, len = array.length; i < len; i++) {
+                if (array[i] === max) {
+                    maxArr.push(i);
+                }
+            }
+            return maxArr;
+        },
+
+        func1: function (pos, colors) {
+            var x = pos.x, y = pos.y, myColor = colors.myColor, hisColor = colors.hisColor;
+            var chessArr = [[], [], [], []];
+            var stateObj = {
+                win5: 0,
+                alive4: 0,
+                die4: 0,
+                alive3: 0,
+                die3: 0,
+                lowDie4: 0,
+                jump3: 0,
+                alive2: 0,
+                lowAlive2: 0,
+                die2: 0,
+                none: 0
+            };
+            var LevelOne = 100000, LevelTwo = 10000, LevelThree = 5000, LevelFour = 1000, LevelFive = 500, LevelSix = 400, LevelSeven = 100, LevelEight = 90, LevelNine = 50, LevelTen = 10, LevelEleven = 9, LevelTwelve = 5, LevelThirteen = 2, LevelFourteen = 1;
+
+            for (var i = 0; i < 9; i++) {
+                if (i === 4) {
+                    chessArr[0].push(myColor);
+                    chessArr[1].push(myColor);
+                    chessArr[2].push(myColor);
+                    chessArr[3].push(myColor);
+                    continue;
+                }
+                // |
+                if ((x - 4 + i) > -1 && (x - 4 + i) < 15) {
+                    chessArr[0].push(chesspiecePos[x - 4 + i][y]);
+                } else {
+                    chessArr[0].push(hisColor);
+                }
+                // --
+                if ((y - 4 + i) > -1 && (y - 4 + i) < 15) {
+                    chessArr[1].push(chesspiecePos[x][y - 4 + i]);
+                } else {
+                    chessArr[1].push(hisColor);
+                }
+                // \
+                if (((y - 4 + i) > -1 && (y - 4 + i) < 15) && ((x - 4 + i) > -1 && (x - 4 + i) < 15)) {
+                    chessArr[2].push(chesspiecePos[x - 4 + i][y - 4 + i]);
+                } else {
+                    chessArr[2].push(hisColor);
+                }
+                // /
+                if (((y - 4 + i) > -1 && (y - 4 + i) < 15) && ((x + 4 - i) > -1 && (x + 4 - i) < 15)) {
+                    chessArr[3].push(chesspiecePos[x + 4 - i][y - 4 + i]);
+                } else {
+                    chessArr[3].push(hisColor);
+                }
+            }
+
+            for (var j = 0; j < 4; j++) {
+                var state = this.func2(chessArr[j], colors);
+                switch (state) {
+                    case 1:
+                        stateObj.win5 += 1;
+                        break;
+                    case 2:
+                        stateObj.alive4 += 1;
+                        break;
+                    case 3:
+                        stateObj.die4 += 1;
+                        break;
+                    case 4:
+                        stateObj.lowDie4 += 1;
+                        break;
+                    case 5:
+                        stateObj.alive3 += 1;
+                        break;
+                    case 6:
+                        stateObj.jump3 += 1;
+                        break;
+                    case 7:
+                        stateObj.die3 += 1;
+                        break;
+                    case 8:
+                        stateObj.alive2 += 1;
+                        break;
+                    case 9:
+                        stateObj.die2 += 1;
+                        break;
+                    case 10:
+                        stateObj.lowAlive2 += 1;
+                        break;
+                    case 11:
+                        stateObj.none += 1;
+                        break;
+                }
+            }
+
+            if (stateObj.win5 >= 1) {
+                return LevelOne;
+            }
+            if (stateObj.alive4 >= 1 || stateObj.die4 >= 2 || (stateObj.die4 >= 1 && stateObj.alive3 >= 1)) {
+                return LevelTwo;
+            }
+            if (stateObj.alive3 >= 2) {
+                return LevelThree;
+            }
+            if (stateObj.die3 >= 1 && stateObj.alive3 >= 1) {
+                return LevelFour;
+            }
+            if (stateObj.die4 >= 1) {
+                return LevelFive;
+            }
+            if (stateObj.lowDie4 >= 1) {
+                return LevelSix;
+            }
+            if (stateObj.alive3 >= 1) {
+                return LevelSeven;
+            }
+            if (stateObj.jump3 >= 1) {
+                return LevelEight;
+            }
+            if (stateObj.alive2 >= 2) {
+                return LevelNine;
+            }
+            if (stateObj.alive2 >= 1) {
+                return LevelTen;
+            }
+            if (stateObj.lowAlive2 >= 1) {
+                return LevelEleven;
+            }
+            if (stateObj.die3 >= 1) {
+                return LevelTwelve;
+            }
+            if (stateObj.die2 >= 1) {
+                return LevelThirteen;
+            }
+            return LevelFourteen;
+        },
+
+        func2: function (chessArr, colors) {
+            var myColor = colors.myColor, hisColor = colors.hisColor, noColor = colors.noColor;
+            var leftColors = [], rightColors = [];
+            var count = 1;
+            var WIN5 = 1, ALIVE4 = 2, DIE4 = 3, LOWDIE4 = 4, ALIVE3 = 5, JUMP3 = 6, DIE3 = 7, ALIVE2 = 8, DIE2 = 9, LOWALIVE2 = 10, NONE = 11;
+
+            for (var i = 1; i < 5; i++) {
+                if (leftColors.length === 0 && chessArr[4 - i] === myColor) {
+                    count += 1;
+                } else {
+                    leftColors.push(chessArr[4 - i]);
+                }
+                if (rightColors.length === 0 && chessArr[4 + i] === myColor) {
+                    count += 1;
+                } else {
+                    rightColors.push(chessArr[4 + i]);
+                }
+            }
+
+            if (count >= 5) {
+                return WIN5;
+            }
+            if (count === 4) {
+                if (leftColors[0] === noColor && rightColors[0] === noColor) {
+                    return ALIVE4;
+                } else if (leftColors[0] === hisColor && rightColors === hisColor) {
+                    return NONE;
+                } else if (leftColors[0] === noColor || rightColors === noColor) {
+                    return DIE4;
+                }
+            }
+            if (count === 3) {
+                if (leftColors[0] === noColor && rightColors[0] === noColor) {
+                    if (leftColors[1] === hisColor && rightColors[1] === hisColor) {
+                        return DIE3;
+                    } else if (leftColors[1] === myColor || rightColors[1] === myColor) {
+                        return LOWDIE4;
+                    } else if (leftColors[1] === noColor || rightColors[1] === noColor) {
+                        return ALIVE3;
+                    }
+                } else if (leftColors[0] === hisColor && rightColors[0] === hisColor) {
+                    return NONE;
+                } else if (leftColors[0] === hisColor) {
+                    if (rightColors[1] === hisColor) {
+                        return NONE;
+                    } else if (rightColors[1] === noColor) {
+                        return DIE3;
+                    } else {
+                        return LOWDIE4;
+                    }
+                } else {
+                    if (leftColors[1] === hisColor) {
+                        return NONE;
+                    } else if (leftColors[1] === noColor) {
+                        return DIE3;
+                    } else {
+                        return LOWDIE4;
+                    }
+                }
+            }
+            if (count === 2) {
+                if (leftColors[0] === noColor && rightColors[0] === noColor) {
+                    if ((rightColors[1] === noColor && rightColors[2] === myColor) || (leftColors[1] === noColor && leftColors[2] === myColor)) {
+                        return DIE3;
+                    } else if (leftColors[1] === noColor && rightColors[1] === 0) {
+                        return ALIVE2;
+                    }
+                    if ((rightColors[1] === myColor && rightColors[2] === hisColor) || (leftColors[1] === myColor && leftColors[2] === hisColor)) {
+                        return DIE3;
+                    }
+                    if ((rightColors[1] === myColor && rightColors[2] === myColor) || (leftColors[1] === myColor && leftColors[2] === myColor)) {
+                        return DIE4;
+                    }
+                    if ((rightColors[1] === myColor && rightColors[2] === noColor) || (leftColors[1] === myColor && leftColors[2] === noColor)) {
+                        return JUMP3;
+                    }
+                } else if (leftColors[0] === hisColor && rightColors[0] === hisColor) {
+                    return NONE;
+                } else if (leftColors[0] === hisColor) {
+                    if (rightColors[1] === noColor && rightColors[2] === noColor) {
+                        return DIE2;
+                    }
+                    if (rightColors[1] === myColor && rightColors[2] === myColor) {
+                        return LOWDIE4;
+                    }
+                    if ((rightColors[1] === myColor && rightColors[2] === noColor) || (rightColors[1] === noColor && rightColors[2] === myColor)) {
+                        return DIE3;
+                    }
+                } else {
+                    if (leftColors[1] === noColor && leftColors[2] === noColor) {
+                        return DIE2;
+                    }
+                    if (leftColors[1] === myColor && leftColors[2] === myColor) {
+                        return LOWDIE4;
+                    }
+                    if ((leftColors[1] === myColor && leftColors[2] === noColor) || (leftColors[1] === noColor && leftColors[2] === myColor)) {
+                        return DIE3;
+                    }
+                }
+            }
+            if (count === 1) {
+                if ((leftColors[0] === noColor && leftColors[1] === myColor && leftColors[2] === myColor && leftColors[3] === myColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === myColor && rightColors[2] === myColor && rightColors[3] === myColor)) {
+                    return LOWDIE4;
+                }
+                if ((leftColors[0] === noColor && leftColors[1] === myColor && leftColors[2] === myColor && leftColors[3] === noColor && rightColors[0] === noColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === myColor && rightColors[2] === myColor && rightColors[3] === noColor && leftColors[0] === noColor)) {
+                    return JUMP3;
+                }
+                if ((leftColors[0] === noColor && leftColors[1] === myColor && leftColors[2] === myColor && leftColors[3] === hisColor && rightColors[0] === noColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === myColor && rightColors[2] === myColor && rightColors[3] === hisColor && leftColors[0] === noColor) ||
+                    (leftColors[0] === noColor && leftColors[1] === noColor && leftColors[2] === myColor && leftColors[3] === myColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === noColor && rightColors[2] === myColor && rightColors[3] === myColor) ||
+                    (leftColors[0] === noColor && leftColors[1] === myColor && leftColors[2] === noColor && leftColors[3] === myColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === myColor && rightColors[2] === noColor && rightColors[3] === myColor)) {
+                    return DIE3;
+                }
+                if ((leftColors[0] === noColor && leftColors[1] === myColor && leftColors[2] === noColor && leftColors[3] === noColor && rightColors[0] === noColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === myColor && rightColors[2] === noColor && rightColors[3] === noColor && leftColors[0] === noColor) ||
+                    (leftColors[0] === noColor && leftColors[1] === noColor && leftColors[2] === myColor && leftColors[3] === noColor && rightColors[0] === noColor) ||
+                    (rightColors[0] === noColor && rightColors[1] === noColor && rightColors[2] === myColor && rightColors[3] === noColor && leftColors[0] === noColor)) {
+                    return LOWALIVE2;
+                }
+            }
+            return NONE;
+        }
+    }
+}());
+
+GoBang.init();
+    </script>
+  </body>
+</html>

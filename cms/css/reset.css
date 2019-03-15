@@ -1,0 +1,22 @@
+﻿body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,textarea,p,blockquote,th,td,figure,figcaption{padding: 0;margin: 0;}
+table {border-collapse: collapse;border-spacing: 0;}
+fieldset,img {border: 0;}
+address,caption,cite,code,dfn,em,strong,th,var {font-weight: normal;font-style: normal;}
+ol,ul {list-style: none;}
+caption,th {text-align: left;}
+h1,h2,h3,h4,h5,h6 {font-weight: normal;font-size: 100%;}
+q:before,q:after {content:'';}
+abbr,acronym {border: 0;font-variant:normal;}
+a{text-decoration: none;transition:all .3s;}
+sup{vertical-align:baseline;}
+sub{vertical-align:baseline;}
+legend{color:#000;}
+input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}
+input,button,textarea,select{*font-size:100%;outline:none;resize:none;}
+/*兼容IE6/7*/
+.cl {*zoom: 1;} 
+.cl:before,.cl:after{display: table;line-height: 0;content: "";} 
+.cl:after {clear: both;}
+@media (max-width:1080px){
+	body{width:122%;}
+}

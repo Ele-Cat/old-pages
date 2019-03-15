@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+  <link rel="stylesheet" href="https://unpkg.com/iview/dist/styles/iview.css">
+  <title>天气预报</title>
+  <style>
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #F90;
+      background-image: -webkit-linear-gradient(45deg,rgba(255,255,255,.4) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.4) 75%,transparent 75%,transparent);
+      -webkit-border-radius: 2em;
+      -moz-border-radius: 2em;
+      border-radius: 2em;
+    }
+    ::-webkit-scrollbar-track {
+      background-color: transparent;
+      -webkit-border-radius: 2em;
+      -moz-border-radius: 2em;
+      border-radius: 2em;
+    }
+    .demo-spin-icon-load{
+      animation: ani-demo-spin 1s linear infinite;
+    }
+    @keyframes ani-demo-spin {
+      from { transform: rotate(0deg);}
+      50%  { transform: rotate(180deg);}
+      to   { transform: rotate(360deg);}
+    }
+    #app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+      overflow: hidden;
+    }
+    [v-cloak] {
+      display: none;
+    }
+    .ivu-table .demo-table-info-column {
+      max-width: 140px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" v-cloak>
+    <Divider>{{province}}-{{city}}-{{town}} 天气预报</Divider>
+    <div style="text-align: right;">查询时间：{{forecast.pubdate}} {{forecast.pubtime}} </div><br />
+
+    <i-table size="small" stripe border highlight-row :columns="weatherColumn" :data="weather"></i-table><br />
+
+    <Row v-for="(item, index) in lifeList" :key="index">
+      <i-col span="4" style="text-align: right;padding-right: 4px;">{{item.type}}</i-col>
+      <i-col span="20">{{item.des}}</i-col>
+    </Row>
+
+    <Spin fix v-if="spinShow">
+      <Icon type="ios-loading" size=18 class="demo-spin-icon-load"></Icon>
+      <div>Loading</div>
+    </Spin>
+  </div>
+
+  <script src="https://cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/iview/dist/iview.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    const app = new Vue({
+      el: '#app',
+      data: {
+        spinShow: true,
+        forecast: {},
+        province: '',
+        city: '',
+        town: '',
+        weather: [],
+        weatherColumn: [
+          {
+            title: '日期',
+            key: 'date',
+            width: 150,
+            align: 'center',
+            className: 'demo-table-info-column'
+          },
+          {
+            title: '早上',
+            key: 'dawn'
+          },
+          {
+            title: '中午',
+            key: 'day'
+          },
+          {
+            title: '晚上',
+            key: 'night'
+          }
+        ],
+        alarmTp: '',
+        alert: '',
+        lifeList: [],
+      },
+      created() {
+        // 获取天气信息
+        this.getForecast();
+      },
+      methods: {
+        getForecast: function () {
+          var that = this;
+          that.$Loading.start();
+          $.ajax({
+            type: "GET",
+            url: "https://cdn.weather.hao.360.cn/sed_api_weather_info.php?app=360chrome",
+            dataType: "jsonp",
+            jsonp: "_jsonp",
+            success: function (res) {
+              // 得到天气信息
+              // console.log(res)
+              that.$Loading.finish();
+              that.forecast = res;
+
+              // 渲染省市区
+              that.province = res.area[0][0];
+              that.city = res.area[1][0];
+              that.town = res.area[2][0];
+
+              // 渲染天气表格
+              var weatherList = [];
+              for (var i in res.weather) {
+                var date = res.weather[i].date;
+                var dawn = '气温:' + res.weather[i].info.dawn[0] + '~' + res.weather[i].info.dawn[2] + '℃ ' + '天气:' + res.weather[i].info.dawn[1] + '  ' + res.weather[i].info.dawn[3] + ' ' + res.weather[i].info.dawn[4];
+                var day = '气温:' + res.weather[i].info.day[0] + '~' + res.weather[i].info.day[2] + '℃ ' + '天气:' + res.weather[i].info.day[1] + '  ' + res.weather[i].info.day[3] + ' ' + res.weather[i].info.day[4];
+                var night = '气温:' + res.weather[i].info.night[0] + '~' + res.weather[i].info.night[2] + '℃ ' + '天气:' + res.weather[i].info.night[1] + '  ' + res.weather[i].info.night[3] + ' ' + res.weather[i].info.night[4];
+                var weatherItem = {
+                  date: date,
+                  dawn: dawn,
+                  day: day,
+                  night: night
+                }
+                weatherList.push(weatherItem);
+              }
+              that.weather = weatherList;
+              // $('.demo-table-info-column').css('width', '120px');
+
+              // 是否有天气警报
+              if (res.alert && res.alert.length && res.alert[0].alarmTp1 && res.alert[0].alarmTp2) {
+                that.alarmTp = res.alert[0].alarmTp1 + res.alert[0].alarmTp2;
+                that.alarm = res.alert[0].content;
+                that.$Notice.warning({
+                  title: that.alarmTp,
+                  desc: that.alarm,
+                  duration: 0
+                });
+              }
+
+              // 渲染生活信息
+              var lifeList = [
+                {
+                  type: '穿衣：',
+                  des: res.life.info.chuanyi[0] + '  ' + res.life.info.chuanyi[1]
+                },
+                {
+                  type: '感冒：',
+                  des: res.life.info.ganmao[0] + '  ' + res.life.info.ganmao[1]
+                },
+                {
+                  type: '空调：',
+                  des: res.life.info.kongtiao[0] + '  ' + res.life.info.kongtiao[1]
+                },
+                {
+                  type: '污染：',
+                  des: res.life.info.wuran[0] + '  ' + res.life.info.wuran[1]
+                },
+                {
+                  type: '洗车：',
+                  des: res.life.info.xiche[0] + '  ' + res.life.info.xiche[1]
+                },
+                {
+                  type: '运动：',
+                  des: res.life.info.yundong[0] + '  ' + res.life.info.yundong[1]
+                },
+                {
+                  type: '紫外线：',
+                  des: res.life.info.ziwaixian[0] + '  ' + res.life.info.ziwaixian[1]
+                },
+                {
+                  type: 'PM2.5：',
+                  des: res.pm25.pm25[0]
+                },
+              ]
+              that.lifeList = lifeList;
+              that.spinShow = false;
+            }
+          })
+        }
+      }
+    })
+  </script>
+
+</body>
+
+</html>

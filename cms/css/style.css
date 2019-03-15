@@ -1,0 +1,150 @@
+﻿body{font-family: "Lantinghei SC","Open Sans",Arial,"Hiragino Sans GB","Microsoft YaHei","\5FAE\8F6F\96C5\9ED1","STHeiti","WenQuanYi Micro Hei",SimSun,sans-serif;font-size: 15px;color: #fff;padding-top: 50px;overflow-x: 100%;}
+@font-face {
+	font-family:'aa';
+	src: url('Droid Sans.ttf');
+}
+body{font-family: "aa","Droid Sans";}
+img{max-width: 100%;max-height: 100%;color: #776d54;}
+h3{font-size: 24px;}
+
+.inner{width: 1200px;margin: 0 auto;}
+.header{z-index: 1000;height: 50px;width: 100%;background: #303030;position: fixed;top: 0;left: 0;box-shadow: 0 3px 6px #222;}
+.header .logo{float: left;height: 50px;line-height: 50px;}
+.header .logo a{display: block;}
+.header .logo img{height: 40px;margin: 5px 0 0 0;}
+.header .nav{float: left;margin-left: 10px;}
+.header .nav li{float: left;position: relative;line-height: 50px;margin-left: 2px;width: 6.2em;text-align: center;transition: all .4s ease-in-out;}
+.header .nav li a{color: #eee;display: block;}
+.header .nav li a:hover{color: #1FF3FD;}
+.header .nav li i.hhd{display: inline-block;width: 10px;height: 10px;background: url(../img/icon_14.png) no-repeat center;transition: all .4s;position: relative;left: 3px;}
+.header .nav li:hover i.hhd{transform: rotate(-180deg);}
+.header .nav li ul{position: absolute;display: none;top: 66px;}
+.header .nav li:hover ul{display: block;top: 50px;}
+.header .nav li ul li{background: #303030;margin: 0;line-height: 32px;}
+.header .nav li ul li:hover{background: #666;}
+.header .search{float: right;position: relative;margin: 11px 5px 0 0;}
+.header .toggle_btn{display: block;width: 20px;height: 20px;background: url(../img/search_btn.png) no-repeat;background-size: contain;position: absolute;right: 15px;top: 3px;}
+.header .search_form{display: block;width: 200px;display: none;}
+.header .search_form .text{width: 100%;height: 28px;border-radius: 14px;border: 0;text-indent: 16px;background: #3f3f3f;color: #eee;}
+.header .search_form .btn{position: absolute;width: 20px;height: 20px;background: url(../img/search_btn.png) no-repeat;background-size: contain;border: none;right: 15px;top: 3px;cursor: pointer;}
+.header .skin{position: absolute;left: 50%;margin-left: 600px;line-height: 50px;}
+.header .skin .change_skin{display: block;color: #fff;background: url(../img/icon_11.png) no-repeat center;background-size: 16px 16px;width: 16px;height: 50px;}
+.header .skin ul{display: none;}
+.header .skin ul li{line-height: 26px;width: 26px;}
+.header .skin ul li a{display: block;color: #fff;width: 26px;height: 26px;}
+
+.main{background: #3f3f3f;color: #fff;padding: 22px 0;}
+.m_left{width: 840px;float: left;}
+.m_left .banner{box-shadow: 2px 3px 10px #111;border-radius: 4px;}
+.m_left .banner a img{display: block;}
+.swiper-container-banner{border-radius: 6px;overflow: hidden;}
+.m_left .banner .swiper-pagination{text-align: right;bottom: 9px;}
+.m_left .banner .swiper-pagination-bullet{opacity: 1;background: #fff;}
+.m_left .banner .swiper-pagination-bullet-active{background: #1FF3FD;}
+.m_left .banner .swiper-slide{position: relative;}
+.m_left .banner .swiper-slide p{position: absolute;bottom: 0;color: #fff;background: rgba(0,0,0,.4);width: 100%;line-height: 36px;text-indent: 10px;}
+.m_left .banner .swiper-slide p span{display: block;width: 750px;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;}
+
+.con_box{background: #303030;margin-top: 20px;box-shadow: 2px 3px 10px #111;padding: 10px;position: relative;text-align: justify;border-top: 2px solid #666;border-radius: 6px;}
+.con_box a{color: #fff;}
+.con_box a:hover{color: #1FF3FD;}
+.con_box .title{position:relative;border-bottom:none;}
+.con_box .title::before{content:"";position:absolute;width:100%;height:2px;bottom:0;left:0;background-color:#1FF3FD;visibility:hidden;-webkit-transform:scaleX(0);-moz-transform:scaleX(0);-ms-transform:scaleX(0);-o-transform:scaleX(0);transform:scaleX(0);transition-duration:.2s;transition-timing-function:ease-in-out;transition-delay:0s}
+.con_box .title:hover::before{visibility:visible;-webkit-transform:scaleX(1);-moz-transform:scaleX(1);-ms-transform:scaleX(1);-o-transform:scaleX(1);transform:scaleX(1);}
+.con_box .tip span{display: inline-block;width: 24%;text-indent: 20px;color: #ccc;padding: 12px 0;}
+.con_box .tip span:nth-of-type(1){background: url(../img/icon_1.png) no-repeat left center;background-size: 15px 15px;}
+.con_box .tip span:nth-of-type(2){background: url(../img/icon_2.png) no-repeat left center;background-size: 15px 15px;}
+.con_box .tip span:nth-of-type(3){background: url(../img/icon_3.png) no-repeat left center;background-size: 15px 15px;}
+.con_box .tip span:nth-of-type(4){background: url(../img/icon_4.png) no-repeat left center;background-size: 15px 15px;}
+.con_box .pic{float: left;padding:3px;height:auto;border:1px solid #CCC;overflow:hidden}
+.con_box .pic img{width: 220px;height: 130px;}
+.con_box .pic img{-webkit-transition:opacity .35s,-webkit-transform .35s;transition:opacity .35s,transform .35s;-webkit-transform:scale(1);transform:scale(1)}
+.con_box .pic:hover img{opacity:.7;-webkit-transform:scale(1.1);transform:scale(1.1)}
+.con_box .text{width: 580px;float: right;}
+.con_box .text .love{display: inline-block;text-indent: 20px;color: #ccc;padding: 12px 0;background: url(../img/icon_10.png) no-repeat left 8px;background-size: 14px 14px;position: absolute;bottom: 10px;line-height: 8px;right: 230px;}
+.con_box .text .browse{display: inline-block;text-indent: 20px;color: #ccc;padding: 12px 0;background: url(../img/icon_5.png) no-repeat left center;background-size: 14px 14px;position: absolute;bottom: 10px;line-height: 8px;right: 160px;}
+/*幽灵按钮*/
+.button{display: block;width: 120px;height: 32px;text-decoration: none;line-height: 28px;color: #d4237a;font-weight: bolder;border: 2px solid rgba(255, 255, 255, 0.8);padding-left: 10px; margin: 0 auto; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; background: url("../img/allow.png") no-repeat 80px center; position: relative; transition: 0.4s ease; -webkit-transition: 0.4s ease; -o-transition: 0.4s ease; -moz-transition: 0.4s ease; -ms-transition: 0.4s ease;}
+.button:hover{border: 2px solid rgba(255, 255, 255, 1);background-position: 90px center;}
+.button .line{display: block;position: absolute; background: none; transition: 0.4s ease; -webkit-transition: 0.4s ease; -o-transition: 0.4s ease; -moz-transition: 0.4s ease; -ms-transition: 0.4s ease;}  
+.button:hover .line{background: #fff;} 
+.button .line-top{height: 2px;width: 0px;left: -110%;top: -2px;}  
+.button:hover .line-top{width: 100%;left: -2px;}  
+.button .line-bottom{width: 0px;height: 2px;right: -110%;bottom: -2px;}  
+.button:hover .line-bottom{width: 100%;right: -2px;}
+.button .line-left{width: 2px;height: 0;left: -2px;bottom: -110%;}
+.button:hover .line-left{height: 100%;bottom: -2px;}
+.button .line-right{width: 2px;height: 0px;right: -2px;top: -110%;}
+.button:hover .line-right{height: 100%;top: -2px;}
+/*幽灵按钮*/
+.con_box .button{position: absolute;bottom: 11px;right: 10px;}
+
+.page_list{margin: 30px 0 10px;text-align: center;}
+.page_list a{color: #fff;display: inline-block;padding: 4px 8px;background: #303030;}
+.page_list a.active,.page_list a:hover{background: #666;}
+
+.m_right{width: 340px;float: right;}
+.mr_box{background: #303030;margin-bottom: 20px;box-shadow: 2px 3px 10px #111;border-radius: 6px;}
+.mr_box .mr_title{background: #222;height: 34px;line-height: 32px;text-indent: 6px;font-size: 15px;border-top: 2px solid #666;}
+/* tagscloud */
+#tagscloud{width:340px;height:260px;position:relative;font-size:12px;color:#333;margin: 0 auto;text-align:center;}
+#tagscloud a{position:absolute;top:0px;left:0px;color:#333;text-decoration:none;margin:0 10px 15px 0;line-height:18px;text-align:center;font-size:12px;padding:1px 5px;display:inline-block;border-radius:3px;}
+#tagscloud a.tagc1{background:#666;color:#fff;}
+#tagscloud a.tagc2{background:#F16E50;color:#fff;}
+#tagscloud a.tagc3{background:#006633;color:#fff;}
+#tagscloud a.tagc4{background:#74c9fe;color:#fff;}
+#tagscloud a.tagc5{background:#3256c3;color:#fff;}
+#tagscloud a:hover{color:#fff;background:#1ff3fd;}
+
+.mr_box .mr_ul .ul{border-top: 2px solid #666;background: #222;height: 34px;line-height: 32px;text-align: center;font-size: 15px;}
+.mr_box .mr_ul .ul li{display: block;float: left;width: 33.333333333333%;cursor: pointer;}
+.mr_box .mr_ul .ul li.active{color: #1FF3FD;background: #666;}
+.mr_box .mru_sbox{display: none;padding: 8px 6px;line-height: 1.8em;}
+.mr_box .mru_sbox ul li a{color: #fff;display: block;width: 100%;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;text-indent: 18px;background: url(../img/icon_6.png) no-repeat left center;}
+.mr_box .mru_sbox ul li a:hover{color: #1ff3fd;background: url(../img/icon_7.png) no-repeat left 3px;}
+
+.mr_box .mr_link{padding: 8px 6px;line-height: 1.8em;}
+.mr_box .mr_link ul li a{color: #fff;display: block;width: 100%;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;text-indent: 18px;background: url(../img/icon_8.png) no-repeat left center;}
+.mr_box .mr_link ul li a:hover{color: #1ff3fd;background: url(../img/icon_9.png) no-repeat left 3px;}
+
+.actGotop{position:fixed;bottom:50px;left:50%;width:64px;height:64px;display:none;margin-left: 600px;z-index: 9999;}
+.actGotop a,.actGotop a:link{width:150px;height:195px;display:inline-block;background:url(../img/icon_12.png) no-repeat;outline:none;}
+.actGotop a:hover{outline:none;}
+
+.footer{background: #303030;text-align: center;color: #fff;padding: 10px 0;line-height: 2em;font-size: 12px;}
+
+.ml_nav{background: #303030;height: 46px;line-height: 46px;font-size: 15px;padding: 0 10px;box-shadow: 2px 3px 10px #111;border-top: 2px solid #666;border-radius: 6px;}
+.ml_nav a{color: #fff;}
+.ml_nav a:hover{color: #1ff3fd;}
+.ml_nav span{color: #1ff3fd;font-size: 16px;padding: 0 3px;}
+
+.message{background: #303030;box-shadow: 2px 3px 10px #111;border-top: 2px solid #666;border-radius: 6px;margin-top: 20px;}
+.message .message_tit{height: 46px;line-height: 46px;font-size: 15px;padding: 0 10px;border-bottom: 1px solid #666;}
+.message .message_box{padding: 40px 100px 100px;}
+.message .message_box span{display: inline-block;width: 140px;text-align: right;}
+.message .message_box .text{width: 240px;border: 0;margin-bottom: 10px;height: 32px;background: #efefef;text-indent: 6px;border-radius: 3px;}
+.message .message_box .textarea{width: 480px;height: 120px;border: 0;padding: 6px;background: #efefef;border-radius: 3px;}
+.message .message_box .shangqu{position: relative;top: -114px;}
+.message .message_box .btn{border: 0;border-radius: 3px;background: #efefef;margin: 20px 0 0 140px;height: 32px;width: 120px;font-size: 16px;cursor: pointer;transition: all .3s;}
+.message .message_box .btn:hover{background: #1FF3FD;color: #fff;}
+
+.diary_box{padding: 80px 20px 40px;position: relative;margin: 10px 0;}
+.diary_box:before{content: "";width: 4px;height: 94%;background: #666;position: absolute;left: 50%;top: 48px;margin-left: -2px;border-radius: 2px;}
+.diary_box:after{content: "";width: 64px;height: 64px;background: url(../img/icon_13.png) no-repeat;position: absolute;top: 0;left: 50%;margin-left: -32px;}
+.diary_box .db_left{float: left;width: 380px;}
+.diary_box .db_right{float: right;width: 380px;}
+.diary_box .db_box{width: 360px;margin-bottom: 36px;background: #3f3f3f;padding: 14px 10px;position: relative;border-radius: 6px;text-align: justify;color: #efefef;}
+.diary_box .db_left .db_box:nth-of-type(1){margin-top: 20px;}
+.diary_box .db_left .db_box:before{content: "";width: 0;height: 0;border-left: 10px solid #3f3f3f;border-top: 8px solid transparent;border-bottom: 8px solid transparent;position: absolute;right: -10px;}
+.diary_box .db_left .db_box:after{content: "";width: 8px;height: 8px;background: #1FF3FD;right: -24px;border-radius: 4px;position: absolute;top: 18px;}
+.diary_box .db_right .db_box:before{content: "";width: 0;height: 0;border-right: 10px solid #3f3f3f;border-top: 8px solid transparent;border-bottom: 8px solid transparent;position: absolute;left: -10px;}
+.diary_box .db_right .db_box:after{content: "";width: 8px;height: 8px;background: #1FF3FD;left: -24px;border-radius: 4px;position: absolute;top: 18px;}
+.diary_box .db_box .date{color: #ddd;margin-bottom: 4px;}
+.diary_box .db_right .date{text-align: right;}
+.diary_box .db_box:hover{color: #fff;}
+
+.art_tit h2{font-size: 24px;margin-bottom: 8px;}
+.art_text{border-top: 2px solid #666;font-size: 15px;padding: 10px 0;line-height: 1.6em;}
+
+.page_pn{padding: 20px 0 10px;line-height: 1.6em;}
+.page_pn a.disable{color: #ccc;cursor: no-drop;}

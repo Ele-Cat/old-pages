@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <title>天气预报</title>
+  <style>
+    body, html {
+      padding: 0;
+      margin: 0;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #F90;
+      background-image: -webkit-linear-gradient(45deg,rgba(255,255,255,.4) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.4) 75%,transparent 75%,transparent);
+      -webkit-border-radius: 2em;
+      -moz-border-radius: 2em;
+      border-radius: 2em;
+    }
+    ::-webkit-scrollbar-track {
+      background-color: transparent;
+      -webkit-border-radius: 2em;
+      -moz-border-radius: 2em;
+      border-radius: 2em;
+    }
+    #app {
+      padding: 0 15px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    [v-cloak] {
+      display: none;
+    }
+    .demo-table-expand {
+      font-size: 0;
+    }
+    .demo-table-expand label {
+      width: 130px;
+      color: #99a9bf;
+    }
+    .demo-table-expand .el-form-item {
+      margin-right: 0;
+      margin-bottom: 0;
+      width: 50%;
+    }
+    .demo-table-expand .demo-table-expand-hours {
+      width: 12.5%;
+      border-bottom: 1px dashed #ccc;
+    }
+    .el-form-item__content {
+      font-size: 12px;
+    }
+    .divider {
+      display: table;
+      white-space: nowrap;
+      text-align: center;
+      background: 0 0;
+      font-weight: 500;
+      color: #17233d;
+      font-size: 16px;
+      margin: 16px 0;
+      padding: 0;
+      list-style: none;
+      height: 1px;
+      width: 100%;
+      margin: 24px 0;
+      clear: both;
+      vertical-align: middle;
+      position: relative;
+      top: -.06em;
+      line-height: 1.5;
+    }
+    .divider::before {
+      content: "";
+      display: table-cell;
+      position: relative;
+      top: 50%;
+      width: 50%;
+      border-top: 1px solid #e8eaec;
+      -webkit-transform: translateY(50%);
+      transform: translateY(50%);
+    }
+    .divider::after {
+      content: "";
+      display: table-cell;
+      position: relative;
+      top: 50%;
+      width: 50%;
+      border-top: 1px solid #e8eaec;
+      -webkit-transform: translateY(50%);
+      transform: translateY(50%);
+    }
+    .divider span {
+      padding: 0 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" v-cloak>
+    修改城市：<el-cascader :options="CityInfo" v-model="form.selectedOptions" :change-on-select="true" :clearable="true"
+      :filterable="true" placeholder="请选择查询城市" @change="selCity">
+    </el-cascader><br />
+    <div class="divider"><span>{{form.area}} - 天气预报</span></div>
+    
+    <el-table v-loading="loading" element-loading-text="拼命加载中" element-loading-spinner="el-icon-loading"
+      element-loading-background="rgba(0, 0, 0, 0.8)" stripe border fit highlight-current-row :data="tableData" style="width: 100%">
+      <el-table-column type="expand">
+        <template slot-scope="props">
+          <el-form label-position="left" inline class="demo-table-expand">
+            <el-form-item class="demo-table-expand-hours" :label="item.day" v-for="(item, index) in props.row.hours"
+              :key="index">
+              <span>{{item.tem}}</span>
+              <span>{{item.wea}}</span>
+              <span>{{item.win}}</span>
+              <span>{{item.win_speed}}</span>
+            </el-form-item><br />
+            <el-form-item :label="item.title | emToExponent" v-for="(item, index) in props.row.index" :key="index + props.row.hours.length">
+              <span>{{item.level}}</span>
+              <span>{{item.desc}}</span>
+            </el-form-item>
+          </el-form>
+        </template>
+      </el-table-column>
+      <el-table-column prop="date" label="日期" width="160">
+      </el-table-column>
+      <el-table-column prop="tem" label="气温" width="94">
+      </el-table-column>
+      <el-table-column prop="wea" label="天气">
+      </el-table-column>
+      <el-table-column prop="win" label="风向风速">
+      </el-table-column>
+    </el-table>
+  </div>
+
+  <script src="https://cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+  <script src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="./js/city-data.js"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    const app = new Vue({
+      el: '#app',
+      data: {
+        visible: false,
+        CityInfo: CityInfo,
+        form: {
+          city: '',
+          area: '',
+          selectedOptions: [],//地区筛选数组
+        },
+        tableData: [],
+        loading: true
+      },
+      created() {
+        // 获取当前城市
+        console.log(returnCitySN['cip'] + returnCitySN['cname']);
+        var area = returnCitySN['cname'];
+
+        // 去除“市”
+        this.getArea(area)
+        document.getElementsByTagName("title")[0].innerText = returnCitySN['cname'] + '-天气预报';
+        document.title = returnCitySN['cname'] + '-天气预报';
+
+        // 获取天气信息
+        if (area) {
+          this.getForecast();
+        }
+      },
+      methods: {
+        // 去除“市”
+        getArea(area) {
+          if (area.indexOf('市') != '-1') {
+            this.form.area = area.substring(0, area.length - 1);
+          } else {
+            this.form.area = area
+          }
+          console.log(this.form.area)
+        },
+        selCity(value) {
+          this.form.city = this.form.selectedOptions[0];
+          if (this.form.selectedOptions[1]) {
+            this.form.area = this.form.selectedOptions[1];
+            this.getArea(this.myAddressArea(this.form.area))
+            this.getForecast()
+          }
+        },
+        getForecast: function () {
+          var that = this;
+          $.ajax({
+            type: "GET",
+            url: "https://www.tianqiapi.com/api/",
+            data: {
+              version: 'v1',
+              // ip: returnCitySN['cip']
+              city: that.form.area
+            },
+            success: function (res) {
+              if (res.data && res.data.length) {
+                that.tableData = []
+                document.getElementsByTagName("title")[0].innerText = that.form.area + '-天气预报';
+                document.title = that.form.area + '-天气预报';
+                console.log(res)
+                for (let i = 0; i < res.data.length; i++) {
+                  const indexList = [];
+                  const hoursList = [];
+                  var item = {
+                    date: res.data[i].date + '(' + res.data[i].week + ')',
+                    tem: res.data[i].tem2 + '~' + res.data[i].tem1,
+                    wea: res.data[i].wea,
+                    win: res.data[i].win[0] + ' ' + res.data[i].win_speed,
+                    air: res.data[i].air_level + ' ' + res.data[i].air
+                  }
+                  for (let j = 0; j < res.data[i].index.length; j++) {
+                    indexList.push(res.data[i].index[j]);
+                  }
+                  for (let j = 0; j < res.data[i].hours.length; j++) {
+                    hoursList.push(res.data[i].hours[j]);
+                  }
+                  item['index'] = indexList;
+                  item['hours'] = hoursList;
+                  that.tableData.push(item);
+                }
+                that.loading = false;
+              }
+            }
+          })
+        },
+        myAddressArea: function (value) {
+          for (y in this.CityInfo) {
+            for (z in this.CityInfo[y].children) {
+              if (this.CityInfo[y].children[z].value == value && value != undefined) {
+                return value = this.CityInfo[y].children[z].label;
+              }
+            }
+          }
+        }
+      },
+      filters: {
+        myAddressCity: function (value) {
+          for (y in this.CityInfo) {
+            if (this.CityInfo[y].value == value) {
+              return value = this.CityInfo[y].label
+            }
+          }
+        },
+        emToExponent: function (e) {
+          if (e.indexOf('em') != '-1') {
+            return '减肥指数';
+          } else {
+            return e;
+          }
+        }
+      },
+    })
+  </script>
+
+</body>
+
+</html>

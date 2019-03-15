@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<title>贪吃蛇</title>
+	<style>
+		* {
+			margin: 0px;
+			padding: 0px;
+			list-style: none;
+		}
+
+		body {
+			background-color: aliceblue;
+		}
+
+		#main-show {
+			border-style: groove;
+			border-color: burlywood;
+			border-width: thin;
+			width: 560px;
+			height: 560px;
+			position: relative;
+			background-color: antiquewhite;
+			margin-top: 10px;
+			margin-left: auto;
+			margin-right: auto;
+			overflow: hidden;
+		}
+
+		#snake-head {
+			width: 20px;
+			height: 20px;
+			position: absolute;
+			background-color: black;
+			border-radius: 50%;
+		}
+
+		#snake-body-first {
+			width: 20px;
+			height: 20px;
+			position: absolute;
+			background-color: red;
+			left: -20px;
+			border-radius: 50%;
+		}
+
+		h4 {
+			margin-top: 10px;
+		}
+
+		h6 {
+			margin-top: 5px;
+			margin-bottom: 5px;
+		}
+	</style>
+</head>
+
+<body>
+	<center style="line-height:24px;">
+		<h4><font color="darkcyan">Enter开始，Space暂停,上下左右调节方向,123调节速度,初始速度为2档</font></h4>
+		<h6>
+			<font color="#FF0000">(经测试本游戏在Edge浏览器中部分功能失效！)</font>
+		</h6>
+		<p style="color: blue">得分：   <span id="score" style="color: #FF0000;">0</span>
+		</p>
+	</center>
+
+
+	<div id="main-show">
+		<div id="snake-head"></div>
+		<div id="snake-body-first"></div>
+	</div>
+</body>
+<script>
+	var scorelabel = document.getElementById("score");
+	var score = 0;
+	var show = document.getElementById("main-show");
+	var status = 0;
+	var statusF = true;
+	var si = null;
+	var time = 100;
+	var snakeHead = document.getElementById("snake-head");
+	var snakeBodyFirst = document.getElementById("snake-body-first");
+	var snake = new Array();
+	snake[0] = snakeHead;
+	snake[1] = snakeBodyFirst;
+	//蛇头初始位置
+	var posX = 0;
+	var posY = 0;
+	//初始速度
+	var velX = 20;
+	var velY = 0;
+	//食物坐标
+	var nPosX = 0;
+	var nPosY = 0;
+	var newBody = createNew();
+	function move() {
+		for (i = snake.length - 1; i > 0; i--) {
+			snake[i].style.left = snake[i - 1].style.left;
+			snake[i].style.top = snake[i - 1].style.top;
+		}
+		posX = posX + velX;
+		posY = posY + velY;
+		snakeHead.style.left = posX + "px";
+		snakeHead.style.top = posY + "px";
+		if (posX > 540 || posX < 0 || posY > 540 || posY < 0) {
+			clearInterval(si);
+			statusF = confirm("厉害了，当前得分" + score + ",你撞墙了,再玩一局？");
+			if (statusF) {
+				location.reload();
+			}
+		}
+		if (snake.length > 4) {
+			for (j = 4; j < snake.length; j++) {
+				var bPosX = parseInt(snake[j].style.left);
+				var bPosY = parseInt(snake[j].style.top);
+				if ((posX == bPosX && Math.abs(posY - bPosY) < 20) || (posY == bPosY && Math.abs(posX - bPosX) < 20)) {
+					clearInterval(si);
+					statusF = confirm("厉害了，当前得分" + score + ",你咬到自己了,再玩一局？");
+					if (statusF) {
+						location.reload();
+					}
+
+				}
+			}
+		}
+		if ((posX == nPosX && Math.abs(posY - nPosY) < 20) || (posY == nPosY && Math.abs(posX - nPosX) < 20)) {
+			snake[snake.length] = newBody;
+			newBody = createNew();
+			score = score + 1;
+			scorelabel.innerHTML = score;
+		}
+	}
+	document.onkeydown = function (event) {
+		var keycode = event.keyCode;
+		if (keycode == 108 || keycode == 13) {
+			if (status == 0) {
+				status = 1;
+				clearInterval(si);
+				si = setInterval("move()", time);
+			}
+		}
+		if (keycode == 32) {
+			if (statusF == true) {
+				status = 0;
+				clearInterval(si);
+			}
+		}
+		if (keycode == 49 || keycode == 97) {
+			if (status == 1 && statusF == true) {
+				time = 150;
+				clearInterval(si);
+				si = setInterval("move()", time);
+			}
+		}
+		if (keycode == 50 || keycode == 98) {
+			if (status == 1 && statusF == true) {
+				time = 100;
+				clearInterval(si);
+				si = setInterval("move()", time);
+			}
+		}
+		if (keycode == 51 || keycode == 99) {
+			if (status == 1 && statusF == true) {
+				time = 50;
+				clearInterval(si);
+				si = setInterval("move()", time);
+			}
+		}
+		if (keycode == 37) {
+			if (status == 1 && statusF == true) {
+				if (velX != 20) {
+					velX = -20;
+					velY = 0;
+				}
+			}
+		}
+		if (keycode == 38) {
+			if (status == 1) {
+				if (velY != 20) {
+					velY = -20;
+					velX = 0;
+				}
+			}
+		}
+		if (keycode == 39) {
+			if (status == 1) {
+				if (velX != -20) {
+					velX = 20;
+					velY = 0;
+				}
+			}
+		}
+		if (keycode == 40) {
+			if (status == 1) {
+				if (velY != -20) {
+					velY = 20;
+					velX = 0;
+				}
+			}
+		}
+	}
+	function createNew() {
+		var newSnakeBody = document.createElement("div");
+		newSnakeBody.style.width = "20px";
+		newSnakeBody.style.height = "20px";
+		newSnakeBody.style.position = "absolute";
+		var rgb1 = Math.floor(Math.random() * 256);
+		var rgb2 = Math.floor(Math.random() * 256);
+		var rgb3 = Math.floor(Math.random() * 256);
+		newSnakeBody.style.backgroundColor = "rgb(" + rgb1 + "," + rgb2 + "," + rgb3 + ")";
+		nPosX = Math.floor(Math.random() * 28) * 20;
+		nPosY = Math.floor(Math.random() * 28) * 20;
+		newSnakeBody.style.left = nPosX + "px";
+		newSnakeBody.style.top = nPosY + "px";
+		newSnakeBody.style.borderRadius = "50%";
+		show.appendChild(newSnakeBody);
+		return newSnakeBody;
+	}
+</script>
+
+</html>

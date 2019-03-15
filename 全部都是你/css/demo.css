@@ -1,0 +1,86 @@
+
+*{
+	margin:0;
+	padding:0;
+	overflow:hidden;
+}
+body{
+	background:#000;
+	overflow:hidden;
+}
+.heart{
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	bottom:0;
+	width:200px;
+	height:260px;
+	margin: auto;
+	transform-style:preserve-3d;
+	perspective:800px;
+	animation:rot 15s linear infinite;
+}
+@keyframes rot{
+	from{transform:rotateY(0deg) rotateX(0deg)}
+	to{transform:rotateY(360deg) rotateX(360deg)}
+}
+.rib{
+	position:absolute;
+	width:200px;
+	height:260px;
+	border:solid red;
+	border-width:1px 1px 0 0;
+	border-radius:100% 100% 0/40% 100% 0;
+}
+.cube{
+	position:absolute;
+	left:0;
+	right:0;
+	top:0;
+	bottom:0;
+	margin:auto;
+	width:100px;
+	height:100px;
+	color:red;
+	transform-style:preserve-3d;
+	transform:translateZ(50px);
+}
+.cube div{
+	position:absolute;
+	width:100px;
+	height:100px;
+}
+.cube div:nth-child(1){
+	left:0;
+	top:-100px;
+	transform-origin:bottom;
+	transform:rotateX(90deg);
+}
+.cube div:nth-child(2){
+	left:0;
+	top:100px;
+	transform-origin:top;
+	transform:rotateX(-90deg);
+}
+.cube div:nth-child(3){
+	left:-100px;
+	top:0px;
+	transform-origin:right;
+	transform:rotateY(-90deg);
+}
+.cube div:nth-child(4){
+	left:100px;
+	top:0px;
+	transform-origin:left;
+	transform:rotateY(90deg);
+}
+.cube div:nth-child(5){
+	left:0;
+	top:0px;
+}
+.cube div:nth-child(6){
+	left:0;
+	top:0px;
+	transform:translateZ(-100px);
+}
